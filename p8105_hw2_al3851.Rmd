@@ -25,7 +25,7 @@ station_df = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>
 
 ```
 
-The data is still not tidy because the train line and route number are arranged in the wide format, since each route number is a variable name. However, after cleaning the names of the columns I selected only the needed columns, and within the mutate function, I used recode so that the "YES" "NO" charcter values of vending and entry would now be the logical TRUE FALSE. The data set has `r nrow(station$df)` rows which represent each entrance or exit to every station in NYC and the dataset has `r ncol(station_df)` variables which are `colnames(station_df)`. 
+The data is still not tidy because the train line and route number are arranged in the wide format, since each route number is a variable name. However, after cleaning the names of the columns I selected only the needed columns, and within the mutate function, I used recode so that the "YES" "NO" charcter values of vending and entry would now be the logical TRUE FALSE. The data set has `r nrow(station_df)` rows which represent each entrance or exit to every station in NYC and the dataset has `r ncol(station_df)` variables which are `colnames(station_df)`. 
 
 
 ##ADA Compliance
@@ -40,7 +40,6 @@ distinct_station_df = station_df %>%
 n_stations = nrow(distinct_station_df)
 
 sum(distinct_station_df$ada) / n_stations
-
 
 ```
 
