@@ -28,7 +28,7 @@ station_df = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>
 The data is still not tidy because the train line and route number are arranged in the wide format, since each route number is a variable name. However, after cleaning the names of the columns I selected only the needed columns, and within the mutate function, I used recode so that the "YES" "NO" charcter values of vending and entry would now be the logical TRUE FALSE. The data set has `r nrow(station_df)` rows which represent each entrance or exit to every station in NYC and the dataset has `r ncol(station_df)` variables which are `colnames(station_df)`. 
 
 
-##ADA Compliance
+##ADA Compliance 
 
 I am using distinct with the parameter .keep_all = TRUE to get a dataframe with just one row from each station.
 The number of rows will tell me the number of stations. The sum of the ada variable over the number of rows  will tell me te proportion that is compliant.
@@ -44,3 +44,21 @@ sum(distinct_station_df$ada) / n_stations
 ```
 
 There are 465 distinct stations and 18 percent of the stations are ADA compliant.  
+
+##A Train 
+
+```{r}
+distinct_atrain_station_df = distinct_station_df %>%
+  gather(key = route_number, value = route_name, route1:route11) %>%
+  separate(route_number, sep = "route", into = c("remove1", "route")) %>%
+  select(-remove1) %>%
+  filter(route_name == "A")
+
+distinct_atrain_ada_station_df = distinct_atrain_station_df %>%
+  filter(ada == TRUE)
+
+```
+
+
+`r nrow(distinct_atrain_station_df)` stations serve the A train and `r nrow(distinct_atrain_ada_station_df)` of these stations are ada compliant
+
