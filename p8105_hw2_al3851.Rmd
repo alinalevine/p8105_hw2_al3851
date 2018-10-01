@@ -6,6 +6,7 @@ output: github_document
 ```{r packages}
 
 library(tidyverse)
+library(p8105.datasets)
 
 ```
 
@@ -120,15 +121,56 @@ max_months_df = precipitation_combined_df %>%
   filter(total == max(total)) %>%
   ungroup()
 
-mr_trash_2016_df = mr_trash_df %>%
-  filter(year == 2016)
   
 
 
 ```
 
 
-The precipitation dataset provides data for `r nrow(precipitation_combined_df)` months. The total rainfall in 2016 was `r sum(precipitation_2016_df$total)` and the month with the maximum rainfall in 2016 was `r max_months_df[which(max_months_df$year == 2016), "month"]` with a total of `r max_months_df[which(max_months_df$year == 2016), "total"]` inches of rain. In 2017, the total amount of rain up until August was `r sum(precipitation_2016_df$total)`.  The Mr Trash dataset provides data for ` r nrow(mr_trash_df)` dumpsters and for each dumpster provides data for `ncol(mr_trash_df) -1` variables. The median number of  sports balls in a dumpster in 2016 was `r median(mr_trash_2016_df$sports_balls)` 
+I am creating dataframes so I can report median number of items each year along with months that contain the maximum trash collected
+
+```{r}
+
+mr_trash_2016_df = mr_trash_df %>%
+  filter(year == 2016)
+
+
+mr_trash_2016_totals = mr_trash_df %>%
+  filter(year == 2016) %>%
+  group_by(month) %>%
+  summarise(sum(weight_tons)) %>%
+  rename(sum_trash = `sum(weight_tons)`)
+
+```
+
+
+
+The precipitation dataset provides data for `r nrow(precipitation_combined_df)` months. The total rainfall in 2016 was `r sum(precipitation_2016_df$total)` and the month with the maximum rainfall in 2016 was `r max_months_df[which(max_months_df$year == 2016), "month"]` with a total of `r max_months_df[which(max_months_df$year == 2016), "total"]` inches of rain. In 2017, the total amount of rain up until August was `r sum(precipitation_2016_df$total)`.  The Mr Trash dataset provides data for `r nrow(mr_trash_df)` dumpsters and for each dumpster provides data for `r ncol(mr_trash_df) -1` variables. The median number of  sports balls in a dumpster in 2016 was `r median(mr_trash_2016_df$sports_balls)` In 2016 the month with the highest trash weight collected was `r mr_trash_2016_totals[which(mr_trash_2016_totals$sum_trash== max(mr_trash_2016_totals$sum_trash)), "month"]` coinciding with the month with the highest rainfall.  
+
+
+##Problem 3
+
+Formatting the brfss data
+
+
+```{r}
+
+brfss_2010_df = brfss_smart2010 %>%
+  janitor::clean_names() %>%
+  rename(proportion = data_value) %>%
+  filter(topic == "Overall Health") %>%
+  select(-class, -topic, -question, -sample_size, -c(confidence_limit_low:geo_location)) %>%
+  spread(key = response, value = proportion) %>%
+  janitor::clean_names() %>%
+  mutate(excellent_or_very_good = excellent + very_good)
+
+
+
+```
+
+
+
+
 
 
 
