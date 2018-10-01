@@ -66,9 +66,12 @@ distinct_atrain_ada_station_df = distinct_atrain_station_df %>%
 
 ##Clean Mr. Trash
 
+Along with rounding the number of sports balls to integers and filtering out totals, I will fill in the missing years by extracting the year from the date. 
+
 ```{r}
 library(cellranger)
 library(readxl)
+library(lubridate)
 
 
 mr_trash_df = read_excel("./Data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", skip = 1, sheet = 1, range = "A2:N256") %>%
@@ -76,14 +79,14 @@ mr_trash_df = read_excel("./Data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", s
   filter(!is.na(dumpster)) %>%
   mutate(sports_balls = round(sports_balls, digits = 0)) %>%
   mutate(sports_balls = as.integer(sports_balls)) %>%
-  View()
+  mutate(year = ifelse(!is.na(year), year, year(date)))
+  
 
   
 
-
-
-
 ```
+
+
 
 
 ##Read in Precipitation
@@ -105,6 +108,28 @@ precipitation_combined_df = bind_rows(precipitation_2017_df, precipitation_2016_
   
 
 ```
+
+
+
+I am filtering by year to get the maximum rainfall by year so I can report the months and the totals. 
+
+```{r}
+
+max_months_df = precipitation_combined_df %>%
+  group_by(year) %>%
+  filter(total == max(total)) %>%
+  ungroup()
+
+mr_trash_2016_df = mr_trash_df %>%
+  filter(year == 2016)
+  
+
+
+```
+
+
+The precipitation dataset provides data for `r nrow(precipitation_combined_df)` months. The total rainfall in 2016 was `r sum(precipitation_2016_df$total)` and the month with the maximum rainfall in 2016 was `r max_months_df[which(max_months_df$year == 2016), "month"]` with a total of `r max_months_df[which(max_months_df$year == 2016), "total"]` inches of rain. In 2017, the total amount of rain up until August was `r sum(precipitation_2016_df$total)`.  The Mr Trash dataset provides data for ` r nrow(mr_trash_df)` dumpsters and for each dumpster provides data for `ncol(mr_trash_df) -1` variables. The median number of  sports balls in a dumpster in 2016 was `r median(mr_trash_2016_df$sports_balls)` 
+
 
 
 
