@@ -155,9 +155,9 @@ Formatting the brfss data
 
 ```{r}
 
-brfss_2010_df = brfss_smart2010 %>%
+brfss_df = brfss_smart2010 %>%
   janitor::clean_names() %>%
-  rename(proportion = data_value) %>%
+  rename(proportion = data_value, state = locationabbr) %>%
   filter(topic == "Overall Health") %>%
   select(-class, -topic, -question, -sample_size, -c(confidence_limit_low:geo_location)) %>%
   spread(key = response, value = proportion) %>%
@@ -166,8 +166,51 @@ brfss_2010_df = brfss_smart2010 %>%
 
 
 
+
+
+
 ```
 
+##Summary of Locations
+
+```{r}
+
+distinct_locations = unique(brfss_df$locationdesc)
+
+distinct_states = unique(brfss_df$state)
+length(distinct_states)
+
+most_observed_state_df = brfss_df %>%
+  group_by(state) %>%
+  summarise( n = n()) %>%
+  filter(n == max(n))
+
+```
+
+
+There are `r length(distinct_locations)` distinct locations and all the states are represented including Washington DC. The state with the most observations is `r most_observed_state_df$state`.
+
+
+## Excellence 
+
+I am filtering to just get rows where 
+
+```{r}
+
+brfss_excellent_2002 = brfss_df %>%
+  filter(year == 2002) %>%
+  
+  
+brfss_excellent_median = brfss_excellent_2002 %>%
+  summarise(median(excellent, na.rm = TRUE))
+
+ggplot(brfss_excellent_2002, )
+
+  
+
+```
+
+The median of the excellent responses in 2002 was `r brfss_excellent_median`
 
 
 
