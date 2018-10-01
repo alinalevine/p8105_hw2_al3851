@@ -198,13 +198,15 @@ I am filtering to just get rows where
 ```{r}
 
 brfss_excellent_2002 = brfss_df %>%
-  filter(year == 2002) %>%
+  filter(year == 2002) 
   
   
 brfss_excellent_median = brfss_excellent_2002 %>%
   summarise(median(excellent, na.rm = TRUE))
 
-ggplot(brfss_excellent_2002, )
+ggplot(brfss_excellent_2002, aes(x = excellent)) + 
+  geom_histogram() +
+  labs(title = "Proportion of Excellent Overall Health Scores in 2002", x = "proportion excellent")
 
   
 
