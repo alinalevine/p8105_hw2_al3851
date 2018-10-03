@@ -32,7 +32,7 @@ The data is still not tidy because the train line and route number are arranged 
 ##ADA Compliance 
 
 I am using distinct with the parameter .keep_all = TRUE to get a dataframe with just one row from each station.
-The number of rows will tell me the number of stations. The sum of the ada variable over the number of rows  will tell me te proportion that is compliant.
+The number of rows will tell me the number of distinct stations. The sum of the ada variable divided by the number of rows  will tell me te proportion that is compliant.
 
 ```{r}
 distinct_station_df = station_df %>%
@@ -40,28 +40,32 @@ distinct_station_df = station_df %>%
 
 n_stations = nrow(distinct_station_df)
 
-sum(distinct_station_df$ada) / n_stations
+compliant_percent = (sum(distinct_station_df$ada) / n_stations)*10
 
 ```
 
-There are 465 distinct stations and 18 percent of the stations are ADA compliant.  
+There are 465 distinct stations and `r compliant_percent` percent of the stations are ADA compliant.  
 
 ##A Train 
 
+I am making route number a variable by using the gather function. I don't need the entries in the route_number column to start with route, so I am separating the entries at the end of the word route, and am deleting the column just consisting of the word "route". The I am filtering for stations that have an A train route and am further filtering to choose only stations that are ada compliant. 
+
 ```{r}
-distinct_atrain_station_df = distinct_station_df %>%
+distinct_a_df = distinct_station_df %>%
   gather(key = route_number, value = route_name, route1:route11) %>%
   separate(route_number, sep = "route", into = c("remove1", "route")) %>%
   select(-remove1) %>%
   filter(route_name == "A")
 
-distinct_atrain_ada_station_df = distinct_atrain_station_df %>%
+distinct_a_ada_df = distinct_a_df %>%
   filter(ada == TRUE)
 
 ```
 
 
-`r nrow(distinct_atrain_station_df)` stations serve the A train and `r nrow(distinct_atrain_ada_station_df)` of these stations are ada compliant
+`r nrow(distinct_a_df)` stations serve the A train 
+
+and `r nrow(distinct_a_ada_df)` of these stations are ada compliant
 
 #Problem 2 
 
@@ -206,13 +210,23 @@ brfss_excellent_median = brfss_excellent_2002 %>%
 
 ggplot(brfss_excellent_2002, aes(x = excellent)) + 
   geom_histogram() +
-  labs(title = "Proportion of Excellent Overall Health Scores in 2002", x = "proportion excellent")
+  labs(title = "Proportion of Excellent Overall Health Scores in 2002",
+       x = "proportion excellent")
+
+brfss_df %>%
+  filter(locationdesc %in% c("NY - New York County", "NY - Queens County")) %>%
+  ggplot(aes(x = year, y = excellent, color = locationdesc)) + 
+  geom_point() +
+  labs(title = "Excellent Response Proportions From 2002 to 2010", 
+       y = "proportion excellent")
 
   
 
 ```
 
 The median of the excellent responses in 2002 was `r brfss_excellent_median`
+
+
 
 
 
