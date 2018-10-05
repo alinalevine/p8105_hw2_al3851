@@ -3,10 +3,14 @@ title: "p8105_hw2_al3851.Rmd"
 output: github_document
 ---
 
-```{r packages}
+
+```{r packages, results = "hide", message = FALSE}
 
 library(tidyverse)
 library(p8105.datasets)
+library(cellranger)
+library(readxl)
+library(lubridate)
 
 ```
 
@@ -15,7 +19,7 @@ library(p8105.datasets)
 ##Initial Cleaning
 
 
-```{r}
+```{r initial cleaning, results = "hide", warning = FALSE, message = FALSE}
 
 station_df = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
@@ -26,7 +30,7 @@ station_df = read_csv("./Data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>
 
 ```
 
-The data is still not tidy because the train line and route number are arranged in the wide format, since each route number is a variable name. However, after cleaning the names of the columns I selected only the needed columns, and within the mutate function, I used recode so that the "YES" "NO" charcter values of vending and entry would now be the logical TRUE FALSE. The data set has `r nrow(station_df)` rows which represent each entrance or exit to every station in NYC and the dataset has `r ncol(station_df)` variables which are `colnames(station_df)`. 
+The data is still not tidy because the train line and route number are arranged in the wide format, since each route number is a variable name. However, after cleaning the names of the columns I selected only the needed columns, and within the mutate function, I used recode so that the "YES" "NO" charcter values of vending and entry would now be the logical TRUE FALSE. The data set has `r nrow(station_df)` rows which represent each entrance or exit to every station in NYC and the dataset has `r ncol(station_df)` columns which are `r colnames(station_df)`. 
 
 
 ##ADA Compliance 
@@ -34,7 +38,7 @@ The data is still not tidy because the train line and route number are arranged 
 I am using distinct with the parameter .keep_all = TRUE to get a dataframe with just one row from each station.
 The number of rows will tell me the number of distinct stations. The sum of the ada variable divided by the number of rows  will tell me te proportion that is compliant.
 
-```{r}
+```{r ada compliance, results = "hide", warning = FALSE, message = FALSE}
 distinct_station_df = station_df %>%
   distinct(line, station_name, .keep_all = TRUE)
 
@@ -48,9 +52,9 @@ There are 465 distinct stations and `r compliant_percent` percent of the station
 
 ##A Train 
 
-I am making route number a variable by using the gather function. I don't need the entries in the route_number column to start with route, so I am separating the entries at the end of the word route, and am deleting the column just consisting of the word "route". The I am filtering for stations that have an A train route and am further filtering to choose only stations that are ada compliant. 
+I am making route number a variable by using the gather function. I don't need the entries in the route_number column to start with route, so I am separating the entries at the end of the word route, and am deleting the column just consisting of the word "route". Then I am filtering for stations that have an A train route and am further filtering to choose only stations that are ada compliant. 
 
-```{r}
+```{r a train, results = "hide", warning = FALSE, message = FALSE}
 distinct_a_df = distinct_station_df %>%
   gather(key = route_number, value = route_name, route1:route11) %>%
   separate(route_number, sep = "route", into = c("remove1", "route")) %>%
@@ -63,21 +67,15 @@ distinct_a_ada_df = distinct_a_df %>%
 ```
 
 
-`r nrow(distinct_a_df)` stations serve the A train 
-
-and `r nrow(distinct_a_ada_df)` of these stations are ada compliant
+`r nrow(distinct_a_df)` stations serve the A train and `r nrow(distinct_a_ada_df)` of these stations are ADA compliant
 
 #Problem 2 
 
 ##Clean Mr. Trash
+After reading in the data, I am using the round() function to round sports balls to the nearest integer and as.integer to convert the column to integer.
 
-Along with rounding the number of sports balls to integers and filtering out totals, I will fill in the missing years by extracting the year from the date. 
+```{r clean mr_trash, results = "hide", warning = FALSE, message = FALSE}
 
-```{r}
-library(cellranger)
-library(readxl)
-library(lubridate)
-library(dplyr)
 
 
 mr_trash_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", 
@@ -86,14 +84,8 @@ mr_trash_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
                          range = cell_cols("A:N")) %>% 
   janitor::clean_names() %>%
   filter(!is.na(dumpster)) %>%
-  filter(!grepl("Total", month)) %>%
   mutate(sports_balls = round(sports_balls, digits = 0)) %>%
-  mutate(sports_balls = as.integer(sports_balls)) %>%
-  mutate(year = ifelse(!is.na(year), year, year(date)))
-  
-
-
-  
+  mutate(sports_balls = as.integer(sports_balls))
 
 ```
 
@@ -103,14 +95,18 @@ mr_trash_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
 ##Read in Precipitation
 
 
-```{r}
+```{r read in precip, warning = FALSE, message = FALSE}
 
-precipitation_2017_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", skip = 1, sheet = 3, range = "A2:B10") %>%
+precipitation_2017_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx", 
+                                   sheet = 4, 
+                                   range = "A2:B10") %>%
   janitor::clean_names() %>%
   mutate(year = 2017)
 
 
-precipitation_2016_df = read_excel("./Data/HealthyHarborWaterWheelTotals2017-9-26.xlsx", skip = 1, sheet = 4, range = "A2:B14") %>%
+precipitation_2016_df = read_excel("./Data/HealthyHarborWaterWheelTotals2018-7-28.xlsx",
+                                   sheet = 5, 
+                                   range = "A2:B14") %>%
   janitor::clean_names() %>%
   mutate( year = 2016)
 
@@ -121,54 +117,42 @@ precipitation_combined_df = bind_rows(precipitation_2017_df, precipitation_2016_
 ```
 
 
+##Dataframe Summaries
 
-I am filtering by year to isolate the months with the highest total rainfall each year. 
-I am also creating dataframes so I can report median number of items each year along with the months that contain the maximum trash collected
+I am creating two dataframes to report the months with the highest rainfall for each year. I am also creating two different mr_trash dataframes by filtering by year.
 
-```{r}
+```{r about dataframes, results = "hide", warning = FALSE, message = FALSE}
 
-max_month_df = precipitation_combined_df %>%
-  group_by(year) %>%
-  filter(total == max(total)) %>%
-  
-  
-max_month_2016_df = max_month %>%
-  filter(year == 2016) 
-  
+max_month_precip_2016_df = precipitation_combined_df %>%
+  filter(year == 2016) %>%
+  filter(total == max(total)) 
 
-  
+
+max_month_precip_2017_df = precipitation_combined_df %>%
+  filter(year == 2017) %>%
+  filter(total == max(total)) 
+
 
 mr_trash_2016_df = mr_trash_df %>%
   filter(year == 2016)
 
-
-mr_trash_2016_totals = mr_trash_df %>%
-  filter(year == 2016) %>%
-  group_by(month) %>%
-  summarise(sum(weight_tons)) %>%
-  rename(sum_trash = `sum(weight_tons)`)
+mr_trash_2016_2017_df = mr_trash_df %>%
+  filter(year == 2016 | year == 2017)
 
 ```
 
+The unique identifyer in the precipitation dataset is month and year combined. The precipitation dataset provides data for `r nrow(precipitation_combined_df)` months in 2016 and 2017. The total rainfall in 2016 was `r sum(precipitation_2016_df$total)` inches and the month with the maximum rainfall in 2016 was `r max_month_precip_2016_df$month` with a total of `r max_month_precip_2016_df$total` inches of rain. 
+In 2017, the total amount of rain was `r sum(precipitation_2017_df$total)` inches. The maximum rainfall occured in `r max_month_precip_2017_df$month` with a total of `r max_month_precip_2016_df$total` inches of rain.
+
+The Mr Trash dataset provides data for `r nrow(mr_trash_df)` dumpsters and for each dumpster, provides data for `r ncol(mr_trash_df) -1` variables. The dataset provides data for the date the contents in the dumpster were emptied, a variable for the weight of the trash, a variable for the volume of the trash, 7 variables each representing the number of specific items, such as cigarette butts, found in the dumpster, and the number of homes the content in each dumpster powered. The median number of  sports balls in a dumpster in 2016 was `r median(mr_trash_2016_df$sports_balls)` balls. The mean weight of trash collected from 2016 to 2017 was `r mean(mr_trash_2016_2017_df$weight_tons)` tons.
 
 
-The unique identifyer in the precipitation dataset is month and year combined. The precipitation dataset provides data for `r nrow(precipitation_combined_df)` months. 
+#Problem 3
 
-The total rainfall in 2016 was `r sum(precipitation_2016_df$total)` and the month with the maximum rainfall in 2016 was `r max_month_2016_df$month` with a total of `r max_month_2016_df$total` inches of rain. 
-
-In 2017, the total amount of rain up until August was `r sum(precipitation_2016_df$total)`.
-
-In the Mr. Trash dataset, the column named dumpster is the unique identifyer.The Mr Trash dataset provides data for `r nrow(mr_trash_df)` dumpsters and for each dumpster provides data for `r ncol(mr_trash_df) -1` variables.  
-
-The median number of  sports balls in a dumpster in 2016 was `r median(mr_trash_2016_df$sports_balls)` In 2016 the month with the highest trash weight collected was `r mr_trash_2016_totals[which(mr_trash_2016_totals$sum_trash== max(mr_trash_2016_totals$sum_trash)), "month"]` coinciding with the month with the highest rainfall.  
+ I am changing "locationabbr" to "state" (including washington dc)because it seems more desriptive. Then I am filtering to only include overall health responses and am selecting columns by excluding columns. Then I am using the spread function to make the type of response (excellent, very good, good, fair, poor) their own columns. 
 
 
-##Problem 3
-
-Formatting the brfss data. I am changing locationabbr to state (including washington dc)because it is more desriptive. Then I am selecting by writing in the columns I will not include and am using the spread function to make the type of response a column. 
-
-
-```{r}
+```{r plots, warning = FALSE, message = FALSE}
 
 brfss_df = brfss_smart2010 %>%
   janitor::clean_names() %>%
@@ -188,7 +172,9 @@ brfss_df = brfss_smart2010 %>%
 
 ##Summary of Locations
 
-```{r}
+I am using the unique function to take out rows that have the same location and am doing the same to take out rows that have duplicate states.
+
+```{r warning = FALSE, message = FALSE, results = "hide"}
 
 distinct_locations = unique(brfss_df$locationdesc)
 
@@ -206,11 +192,11 @@ most_observed_state_df = brfss_df %>%
 There are `r length(distinct_locations)` distinct locations and all the states are represented including Washington DC. The state with the most observations is `r most_observed_state_df$state`.
 
 
-## Excellence 
+## Excellent Score 
 
-I am filtering to just get rows where 
+I am filtering to just get rows where the year is 2002 to get the median of the proportion of excellent responses. Then I am making a histogram of the excellent proportions in 2002. Then I am further filtering to just get data for Queens County and NY County and am making a scatter plot of excellent proportions versus time. 
 
-```{r}
+```{r warning = FALSE, message = FALSE}
 
 brfss_excellent_2002 = brfss_df %>%
   filter(year == 2002) 
@@ -221,15 +207,15 @@ brfss_excellent_median = brfss_excellent_2002 %>%
 
 ggplot(brfss_excellent_2002, aes(x = excellent)) + 
   geom_histogram() +
-  labs(title = "Proportion of Excellent Overall Health Scores in 2002",
-       x = "proportion excellent")
+  labs(title = "Excellent Overall Health Score Proportions in 2002",
+       x = "Excellent Score Proportion (%)")
 
 brfss_df %>%
   filter(locationdesc %in% c("NY - New York County", "NY - Queens County")) %>%
   ggplot(aes(x = year, y = excellent, color = locationdesc)) + 
   geom_point() +
-  labs(title = "Excellent Response Proportions From 2002 to 2010", 
-       y = "proportion excellent")
+  labs(title = "Excellent Response Proportions in NY County and Queens County in 2002", 
+       y = "Excellent Score Proportion (%)")
 
   
 
